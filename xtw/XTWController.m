@@ -52,11 +52,11 @@
         if (overdue > 0) {
             [menuAttributes setObject:[NSColor redColor]
                                forKey:NSForegroundColorAttributeName];	
-            statusTitle = [NSString stringWithFormat:@"%dx%d", [tasks count], overdue];
+            statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasks count], (long)overdue];
         } else {
             [menuAttributes setObject:[NSColor blackColor]
                                forKey:NSForegroundColorAttributeName];	
-            statusTitle = [NSString stringWithFormat:@"%d", [tasks count]];
+            statusTitle = [NSString stringWithFormat:@"%lu", (unsigned long)[tasks count]];
         }
     }
 
