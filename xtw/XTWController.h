@@ -17,5 +17,7 @@
     NSString *taskContents;
     NSMenuItem *quitMI;
     NSMenuItem *aboutMI;
+    BOOL darkModeOn;
+    NSColor *textColor;
 }
 @end

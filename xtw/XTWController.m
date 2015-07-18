@@ -54,8 +54,8 @@
                                forKey:NSForegroundColorAttributeName];	
             statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasks count], (long)overdue];
         } else {
-            [menuAttributes setObject:[NSColor blackColor]
-                               forKey:NSForegroundColorAttributeName];	
+            [menuAttributes setObject:textColor
+                               forKey:NSForegroundColorAttributeName];
             statusTitle = [NSString stringWithFormat:@"%lu", (unsigned long)[tasks count]];
         }
     }
@@ -64,14 +64,24 @@
                                      initWithString:statusTitle
                                      attributes:menuAttributes] autorelease]];
 }
+
 - (id)init
 {
 	self = [super init];
 	if(self)
 	{
+        // Determine current menubar dark/light-mode
+        NSDictionary *dict = [[NSUserDefaults standardUserDefaults] persistentDomainForName:NSGlobalDomain];
+        id style = [dict objectForKey:@"AppleInterfaceStyle"];
+        darkModeOn = (style && [style isKindOfClass:[NSString class]] && NSOrderedSame == [style caseInsensitiveCompare:@"dark"]);
+        [self setTextColor];
+        
+        // Register observer to handle menubar dark/light-mode change
+        [[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(darkModeChanged:) name:@"AppleInterfaceThemeChangedNotification" object:nil];
+        
         taskContents = [[NSString alloc] retain];
         pendingPath = [[@"~/.task/pending.data" stringByExpandingTildeInPath] retain];
-		menu                     = [[NSMenu alloc] init];
+		menu = [[NSMenu alloc] init];
         
         // Set up my status item
         statusItem               = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength] retain];
@@ -106,6 +116,19 @@
     }
     return self;
 }
+
+-(void)setTextColor
+{
+    textColor = (darkModeOn ? [NSColor whiteColor] : [NSColor blackColor]);
+}
+
+-(void)darkModeChanged:(NSNotification *)notif
+{
+    darkModeOn = !darkModeOn;
+    [self setTextColor];
+    [self updateCount];
+}
+
 - (void)downloadNewDataTimerFired
 {
     [self updateCount];
