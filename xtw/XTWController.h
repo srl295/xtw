@@ -5,6 +5,8 @@
 //  Created by Tom MacWright on 11/22/11.
 //  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
 //
+//  Updated by Andy Grant on 2015-09-16.
+//
 
 #import <Foundation/Foundation.h>
 
@@ -19,5 +21,6 @@
     NSMenuItem *aboutMI;
     BOOL darkModeOn;
     NSColor *textColor;
+    NSInteger index;
 }
 @end
