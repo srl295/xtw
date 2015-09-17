@@ -45,10 +45,17 @@
     NSData * dataRead = [read readDataToEndOfFile];
     taskContents = [[[NSString alloc] initWithData:dataRead encoding:NSUTF8StringEncoding] autorelease];
     
-    NSArray *tasks = [[taskContents stringByTrimmingCharactersInSet:
-                       [NSCharacterSet newlineCharacterSet]]
-                      componentsSeparatedByCharactersInSet:
-                      [NSCharacterSet newlineCharacterSet]];
+    NSArray *tasks;
+    
+    if ([taskContents isEqualToString:@""]) {
+        tasks = nil;
+    } else {
+        tasks = [[taskContents stringByTrimmingCharactersInSet:
+                                     [NSCharacterSet newlineCharacterSet]]
+                                    componentsSeparatedByCharactersInSet:
+                                    [NSCharacterSet newlineCharacterSet]];
+    }
+    
     
     NSEnumerator *e = [tasks objectEnumerator];
     id object;
