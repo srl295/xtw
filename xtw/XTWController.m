@@ -19,7 +19,7 @@
     }
     
     NSString *statusTitle = nil;
-    NSDate *timestamp = [NSDate date];
+    NSDate *now = [NSDate date];
     NSInteger overdue = 0, pHigh = 0, pMedium = 0;
     
     NSMutableDictionary *menuAttributes = [NSMutableDictionary dictionary];
@@ -98,12 +98,14 @@
             NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
             [dateFormatter setDateFormat:@"yyyyMMdd'T'HHmmss'Z'"];
             dueDate = [dateFormatter dateFromString:taskData[@"due"]];
-            if (dueDate < timestamp) {
-                overdue++;
-                attributes = @{
-                               NSFontAttributeName: [NSFont fontWithName:@"Lucida Grande" size:12.0],
-                               NSForegroundColorAttributeName: [NSColor redColor]
-                               };
+            switch ([dueDate compare:now]) {
+                case NSOrderedAscending: //dueDate < now
+                    overdue++;
+                    attributes = @{
+                                   NSFontAttributeName: [NSFont fontWithName:@"Lucida Grande" size:12.0],
+                                   NSForegroundColorAttributeName: [NSColor redColor]
+                                   };
+                    break;
             }
         }
         
