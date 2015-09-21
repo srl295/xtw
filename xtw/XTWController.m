@@ -19,8 +19,8 @@
     }
     
     NSString *statusTitle = nil;
-    NSInteger timestamp = (long)[[NSDate date] timeIntervalSince1970];
-    NSInteger overdue = 0;
+    NSDate *timestamp = [NSDate date];
+    NSInteger overdue = 0, pHigh = 0, pMedium = 0;
     
     NSMutableDictionary *menuAttributes = [NSMutableDictionary dictionary];
     
@@ -51,15 +51,15 @@
         tasks = nil;
     } else {
         tasks = [[taskContents stringByTrimmingCharactersInSet:
-                                     [NSCharacterSet newlineCharacterSet]]
-                                    componentsSeparatedByCharactersInSet:
-                                    [NSCharacterSet newlineCharacterSet]];
+                  [NSCharacterSet newlineCharacterSet]]
+                 componentsSeparatedByCharactersInSet:
+                 [NSCharacterSet newlineCharacterSet]];
     }
     
     
     NSEnumerator *e = [tasks objectEnumerator];
     id object;
-    NSInteger dueDate;
+    NSDate *dueDate;
     NSError *jsonError;
     NSData *tData;
     NSDictionary *taskData;
@@ -78,8 +78,26 @@
                        NSForegroundColorAttributeName: textColor
                        };
         
+        if (taskData[@"priority"]) {
+            if ([taskData[@"priority"]  isEqual: @"H"]) {
+                pHigh++;
+                attributes = @{
+                               NSFontAttributeName: [NSFont fontWithName:@"Lucida Grande" size:12.0],
+                               NSForegroundColorAttributeName: [NSColor orangeColor]
+                               };
+            } else if ([taskData[@"priority"]  isEqual: @"M"]) {
+                pMedium++;
+                attributes = @{
+                               NSFontAttributeName: [NSFont fontWithName:@"Lucida Grande" size:12.0],
+                               NSForegroundColorAttributeName: [NSColor yellowColor]
+                               };
+            }
+        }
+        
         if (taskData[@"due"]) {
-            dueDate = [taskData[@"due"] integerValue];
+            NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+            [dateFormatter setDateFormat:@"yyyyMMdd'T'HHmmss'Z'"];
+            dueDate = [dateFormatter dateFromString:taskData[@"due"]];
             if (dueDate < timestamp) {
                 overdue++;
                 attributes = @{
@@ -93,15 +111,26 @@
         [desc setAttributedTitle:attributedTitle];
         [menu insertItem:desc atIndex:index++];
     }
+    
+    [menuAttributes setObject:textColor
+                       forKey:NSForegroundColorAttributeName];
+    statusTitle = [NSString stringWithFormat:@"%lu", (unsigned long)[tasks count]];
+    if (pMedium > 0) {
+        [menuAttributes setObject:[NSColor yellowColor]
+                           forKey:NSForegroundColorAttributeName];
+        statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasks count], (long)pMedium];
+    }
+    if (pHigh > 0) {
+        [menuAttributes setObject:[NSColor orangeColor]
+                           forKey:NSForegroundColorAttributeName];
+        statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasks count], (long)pHigh];
+    }
     if (overdue > 0) {
         [menuAttributes setObject:[NSColor redColor]
                            forKey:NSForegroundColorAttributeName];
         statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasks count], (long)overdue];
-    } else {
-        [menuAttributes setObject:textColor
-                           forKey:NSForegroundColorAttributeName];
-        statusTitle = [NSString stringWithFormat:@"%lu", (unsigned long)[tasks count]];
     }
+    
     
     e = [tasks objectEnumerator];
     
