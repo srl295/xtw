@@ -51,9 +51,9 @@
         tasksJSON = nil;
     } else {
         tasksJSON = [[taskContents stringByTrimmingCharactersInSet:
-                  [NSCharacterSet newlineCharacterSet]]
-                 componentsSeparatedByCharactersInSet:
-                 [NSCharacterSet newlineCharacterSet]];
+                      [NSCharacterSet newlineCharacterSet]]
+                     componentsSeparatedByCharactersInSet:
+                     [NSCharacterSet newlineCharacterSet]];
     }
     
     NSEnumerator *e = [tasksJSON objectEnumerator];
@@ -61,12 +61,12 @@
     NSData *tData;
     NSMutableArray *tasks = [NSMutableArray array];
     NSError *jsonError;
-
+    
     while (task = [e nextObject]) {
         tData = [task dataUsingEncoding:NSUTF8StringEncoding];
         task = [NSJSONSerialization JSONObjectWithData:tData
-                                                   options:NSJSONReadingMutableContainers
-                                                     error:&jsonError];
+                                               options:NSJSONReadingMutableContainers
+                                                 error:&jsonError];
         [tasks addObject:task];
     }
     
@@ -83,24 +83,22 @@
         desc = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(task[@"description"],@"")
                                            action:NULL
                                     keyEquivalent:@""] autorelease];
+        
         attributes = @{
                        NSFontAttributeName: [NSFont fontWithName:@"Lucida Grande" size:12.0],
                        NSForegroundColorAttributeName: textColor
                        };
         
+        NSMutableAttributedString *attributedTitle = [[NSMutableAttributedString alloc] initWithString:[desc title] attributes:attributes];
+        
+        
         if (task[@"priority"]) {
             if ([task[@"priority"]  isEqual: @"H"]) {
                 pHigh++;
-                attributes = @{
-                               NSFontAttributeName: [NSFont fontWithName:@"Lucida Grande" size:12.0],
-                               NSForegroundColorAttributeName: [NSColor orangeColor]
-                               };
+                [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor orangeColor] range:NSMakeRange(0,[desc title].length)];
             } else if ([task[@"priority"]  isEqual: @"M"]) {
                 pMedium++;
-                attributes = @{
-                               NSFontAttributeName: [NSFont fontWithName:@"Lucida Grande" size:12.0],
-                               NSForegroundColorAttributeName: [NSColor yellowColor]
-                               };
+                [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor yellowColor] range:NSMakeRange(0,[desc title].length)];
             }
         }
         
@@ -111,15 +109,15 @@
             switch ([dueDate compare:now]) {
                 case NSOrderedAscending: //dueDate < now
                     overdue++;
-                    attributes = @{
-                                   NSFontAttributeName: [NSFont fontWithName:@"Lucida Grande" size:12.0],
-                                   NSForegroundColorAttributeName: [NSColor redColor]
-                                   };
+                    [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor redColor] range:NSMakeRange(0,[desc title].length)];
                     break;
             }
         }
         
-        NSAttributedString *attributedTitle = [[NSAttributedString alloc] initWithString:[desc title] attributes:attributes];
+        if(task[@"start"]) {
+            [attributedTitle addAttribute:NSBackgroundColorAttributeName value:[NSColor orangeColor] range:NSMakeRange(0,[desc title].length)];
+        }
+        
         [desc setAttributedTitle:attributedTitle];
         [menu insertItem:desc atIndex:index++];
     }
