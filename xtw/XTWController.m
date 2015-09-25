@@ -115,7 +115,7 @@
         }
         
         if(task[@"start"]) {
-            [attributedTitle addAttribute:NSBackgroundColorAttributeName value:[NSColor lightGrayColor] range:NSMakeRange(0,[taskMI title].length)];
+            [attributedTitle addAttribute:NSUnderlineStyleAttributeName value:@(NSUnderlineStyleThick) range:NSMakeRange(0,[taskMI title].length)];
         }
         
         NSMenu *submenu = [[NSMenu alloc] init];
