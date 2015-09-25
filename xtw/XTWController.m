@@ -124,8 +124,12 @@
         NSMenuItem *startMI = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Start",@"")
                                                           action:@selector(start:)
                                                    keyEquivalent:@""] autorelease];
-        [startMI setTarget:self];
-        [startMI setRepresentedObject:task];
+        if (task[@"start"]) {
+            [startMI setAction:NULL];
+        } else {
+            [startMI setTarget:self];
+            [startMI setRepresentedObject:task];
+        }
         [submenu addItem:startMI];
         
         // Finish the task
