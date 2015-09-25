@@ -75,12 +75,12 @@
     }];
     
     NSDate *dueDate;
-    NSMenuItem *desc;
+    NSMenuItem *taskMI;
     NSDictionary *attributes;
     
     e = [tasks objectEnumerator];
     while (task = [e nextObject]) {
-        desc = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(task[@"description"],@"")
+        taskMI = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(task[@"description"],@"")
                                            action:NULL
                                     keyEquivalent:@""] autorelease];
         
@@ -89,16 +89,16 @@
                        NSForegroundColorAttributeName: textColor
                        };
         
-        NSMutableAttributedString *attributedTitle = [[NSMutableAttributedString alloc] initWithString:[desc title] attributes:attributes];
+        NSMutableAttributedString *attributedTitle = [[NSMutableAttributedString alloc] initWithString:[taskMI title] attributes:attributes];
         
         
         if (task[@"priority"]) {
             if ([task[@"priority"]  isEqual: @"H"]) {
                 pHigh++;
-                [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor orangeColor] range:NSMakeRange(0,[desc title].length)];
+                [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor orangeColor] range:NSMakeRange(0,[taskMI title].length)];
             } else if ([task[@"priority"]  isEqual: @"M"]) {
                 pMedium++;
-                [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor yellowColor] range:NSMakeRange(0,[desc title].length)];
+                [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor yellowColor] range:NSMakeRange(0,[taskMI title].length)];
             }
         }
         
@@ -109,17 +109,27 @@
             switch ([dueDate compare:now]) {
                 case NSOrderedAscending: //dueDate < now
                     overdue++;
-                    [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor redColor] range:NSMakeRange(0,[desc title].length)];
+                    [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor redColor] range:NSMakeRange(0,[taskMI title].length)];
                     break;
             }
         }
         
         if(task[@"start"]) {
-            [attributedTitle addAttribute:NSBackgroundColorAttributeName value:[NSColor orangeColor] range:NSMakeRange(0,[desc title].length)];
+            [attributedTitle addAttribute:NSBackgroundColorAttributeName value:[NSColor orangeColor] range:NSMakeRange(0,[taskMI title].length)];
         }
         
-        [desc setAttributedTitle:attributedTitle];
-        [menu insertItem:desc atIndex:index++];
+        NSMenu *submenu = [[NSMenu alloc] init];
+        NSMenuItem *doneMI = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Done",@"")
+                                    action:@selector(done:)
+                             keyEquivalent:@""] autorelease];
+        [doneMI setTarget:self];
+        [doneMI setRepresentedObject:task];
+        
+        [submenu addItem:doneMI];
+        
+        [taskMI setAttributedTitle:attributedTitle];
+        [taskMI setSubmenu:submenu];
+        [menu insertItem:taskMI atIndex:index++];
     }
     
     [menuAttributes setObject:textColor
@@ -149,6 +159,21 @@
                                      initWithString:statusTitle
                                      attributes:menuAttributes] autorelease]];
 }
+
+- (void)done: (id) taskMI
+{
+    id task = [taskMI representedObject];
+    NSTask * taskCommand = [[NSTask alloc] init];
+    NSString *path = @"/usr/local/bin/task";
+    [taskCommand setLaunchPath:path];
+    NSArray *args = [NSArray arrayWithObjects:[NSString stringWithFormat:@"%@",task[@"id"]], @"done", nil];
+    [taskCommand setArguments:args];
+    
+    [taskCommand launch];
+    [taskCommand release];
+    
+}
+
 - (id)init
 {
     self = [super init];
@@ -165,7 +190,7 @@
         
         taskContents = [[NSString alloc] retain];
         pendingPath = [[@"~/.task/pending.data" stringByExpandingTildeInPath] retain];
-        menu                     = [[NSMenu alloc] init];
+        menu = [[NSMenu alloc] init];
         index = 0;
         
         // Set up my status item
