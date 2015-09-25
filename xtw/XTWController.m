@@ -119,12 +119,21 @@
         }
         
         NSMenu *submenu = [[NSMenu alloc] init];
+        
+        // Start the task
+        NSMenuItem *startMI = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Start",@"")
+                                                          action:@selector(start:)
+                                                   keyEquivalent:@""] autorelease];
+        [startMI setTarget:self];
+        [startMI setRepresentedObject:task];
+        [submenu addItem:startMI];
+        
+        // Finish the task
         NSMenuItem *doneMI = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Done",@"")
                                     action:@selector(done:)
                              keyEquivalent:@""] autorelease];
         [doneMI setTarget:self];
         [doneMI setRepresentedObject:task];
-        
         [submenu addItem:doneMI];
         
         [taskMI setAttributedTitle:attributedTitle];
@@ -158,6 +167,20 @@
     [statusItem setAttributedTitle:[[[NSAttributedString alloc]
                                      initWithString:statusTitle
                                      attributes:menuAttributes] autorelease]];
+}
+
+- (void)start: (id) taskMI
+{
+    id task = [taskMI representedObject];
+    NSTask * taskCommand = [[NSTask alloc] init];
+    NSString *path = @"/usr/local/bin/task";
+    [taskCommand setLaunchPath:path];
+    NSArray *args = [NSArray arrayWithObjects:[NSString stringWithFormat:@"%@",task[@"id"]], @"start", nil];
+    [taskCommand setArguments:args];
+    
+    [taskCommand launch];
+    [taskCommand release];
+    
 }
 
 - (void)done: (id) taskMI
