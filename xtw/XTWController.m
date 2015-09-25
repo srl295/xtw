@@ -95,10 +95,10 @@
         if (task[@"priority"]) {
             if ([task[@"priority"]  isEqual: @"H"]) {
                 pHigh++;
-                [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor orangeColor] range:NSMakeRange(0,[taskMI title].length)];
+                [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor magentaColor] range:NSMakeRange(0,[taskMI title].length)];
             } else if ([task[@"priority"]  isEqual: @"M"]) {
                 pMedium++;
-                [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor yellowColor] range:NSMakeRange(0,[taskMI title].length)];
+                [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor orangeColor] range:NSMakeRange(0,[taskMI title].length)];
             }
         }
         
@@ -149,12 +149,12 @@
                        forKey:NSForegroundColorAttributeName];
     statusTitle = [NSString stringWithFormat:@"%lu", (unsigned long)[tasksJSON count]];
     if (pMedium > 0) {
-        [menuAttributes setObject:[NSColor yellowColor]
+        [menuAttributes setObject:[NSColor orangeColor]
                            forKey:NSForegroundColorAttributeName];
         statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasksJSON count], (long)pMedium];
     }
     if (pHigh > 0) {
-        [menuAttributes setObject:[NSColor orangeColor]
+        [menuAttributes setObject:[NSColor magentaColor]
                            forKey:NSForegroundColorAttributeName];
         statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasksJSON count], (long)pHigh];
     }
