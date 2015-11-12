@@ -45,32 +45,22 @@
     NSData * dataRead = [read readDataToEndOfFile];
     taskContents = [[[NSString alloc] initWithData:dataRead encoding:NSUTF8StringEncoding] autorelease];
     
+    NSError *jsonError;
     NSArray *tasksJSON;
     
     if ([taskContents isEqualToString:@""]) {
         tasksJSON = nil;
     } else {
-        tasksJSON = [[taskContents stringByTrimmingCharactersInSet:
-                      [NSCharacterSet newlineCharacterSet]]
-                     componentsSeparatedByString:@",\n"];
+        tasksJSON = [NSJSONSerialization JSONObjectWithData:dataRead options:NSJSONReadingMutableContainers error:&jsonError];
     }
     
-    NSEnumerator *e = [tasksJSON objectEnumerator];
-    id task;
-    NSData *tData;
     NSMutableArray *tasks = [NSMutableArray array];
-    NSError *jsonError;
     
-    while (task = [e nextObject]) {
-        tData = [task dataUsingEncoding:NSUTF8StringEncoding];
-        task = [NSJSONSerialization JSONObjectWithData:tData
-                                               options:NSJSONReadingMutableContainers
-                                                 error:&jsonError];
-        if(task)
-            [tasks addObject:task];
+    for (NSDictionary *task in tasksJSON) {
+        [tasks addObject:task];
     }
     
-    tasks = [tasks sortedArrayUsingComparator:^(id a, id b) {
+    [tasks sortUsingComparator:^(id a, id b) {
         return [[b objectForKey:@"urgency"] compare:[a objectForKey:@"urgency"]];
     }];
     
@@ -78,8 +68,7 @@
     NSMenuItem *taskMI;
     NSDictionary *attributes;
     
-    e = [tasks objectEnumerator];
-    while (task = [e nextObject]) {
+   for (NSDictionary *task in tasks) {
         taskMI = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(task[@"description"],@"")
                                            action:NULL
                                     keyEquivalent:@""] autorelease];
@@ -107,6 +96,7 @@
             [dateFormatter setDateFormat:@"yyyyMMdd'T'HHmmss'Z'"];
             dueDate = [dateFormatter dateFromString:task[@"due"]];
             switch ([dueDate compare:now]) {
+                case NSOrderedSame: //dueDate == now
                 case NSOrderedAscending: //dueDate < now
                     overdue++;
                     [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor redColor] range:NSMakeRange(0,[taskMI title].length)];
@@ -163,9 +153,6 @@
                            forKey:NSForegroundColorAttributeName];
         statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasksJSON count], (long)overdue];
     }
-    
-    
-    e = [tasksJSON objectEnumerator];
     
     
     [statusItem setAttributedTitle:[[[NSAttributedString alloc]
