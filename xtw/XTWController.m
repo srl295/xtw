@@ -52,8 +52,7 @@
     } else {
         tasksJSON = [[taskContents stringByTrimmingCharactersInSet:
                       [NSCharacterSet newlineCharacterSet]]
-                     componentsSeparatedByCharactersInSet:
-                     [NSCharacterSet newlineCharacterSet]];
+                     componentsSeparatedByString:@",\n"];
     }
     
     NSEnumerator *e = [tasksJSON objectEnumerator];
@@ -67,7 +66,8 @@
         task = [NSJSONSerialization JSONObjectWithData:tData
                                                options:NSJSONReadingMutableContainers
                                                  error:&jsonError];
-        [tasks addObject:task];
+        if(task)
+            [tasks addObject:task];
     }
     
     tasks = [tasks sortedArrayUsingComparator:^(id a, id b) {
