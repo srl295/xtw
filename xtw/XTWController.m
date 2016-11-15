@@ -69,7 +69,14 @@
     NSDictionary *attributes;
     
    for (NSDictionary *task in tasks) {
-        taskMI = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(task[@"description"],@"")
+       NSString *taskTitle;
+       if (task[@"project"]) {
+           taskTitle = [NSString stringWithFormat:@"%@: %@",task[@"project"],task[@"description"]];
+       } else {
+           taskTitle = [NSString stringWithFormat:@"%@",task[@"description"]];
+
+       }
+       taskMI = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(taskTitle,@"")
                                            action:NULL
                                     keyEquivalent:@""] autorelease];
         
