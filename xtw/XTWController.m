@@ -28,23 +28,28 @@
                                               size:14]
                        forKey:NSFontAttributeName];
     
-    NSTask * taskCommand = [[NSTask alloc] init];
-    NSString *path = @"/usr/local/bin/task";
-    [taskCommand setLaunchPath:path];
-    NSArray *args = [NSArray arrayWithObjects:@"export", @"status:pending", nil];
-    [taskCommand setArguments:args];
-    NSPipe * out = [NSPipe pipe];
-    [taskCommand setStandardOutput:out];
+    NSData * dataRead;
     
-    [taskCommand launch];
+    // fetch Pending
+    {
+        NSTask * taskCommand = [[NSTask alloc] init];
+        NSString *path = @"/usr/local/bin/task";
+        [taskCommand setLaunchPath:path];
+        NSArray *args = [NSArray arrayWithObjects:@"export", @"status:pending", nil];
+        [taskCommand setArguments:args];
+        NSPipe * out = [NSPipe pipe];
+        [taskCommand setStandardOutput:out];
+        
+        [taskCommand launch];
 
-    NSFileHandle * read = [out fileHandleForReading];
-    NSData * dataRead = [read readDataToEndOfFile];
-    // Now exit task
-    [taskCommand waitUntilExit];
-    [taskCommand release];
-
+        NSFileHandle * read = [out fileHandleForReading];
+        dataRead = [read readDataToEndOfFile];
+        // Now exit task
+        [taskCommand waitUntilExit];
+        [taskCommand release];
+    }
     taskContents = [[[NSString alloc] initWithData:dataRead encoding:NSUTF8StringEncoding] autorelease];
+    
     
     NSError *jsonError;
     NSArray *tasksJSON;
@@ -54,17 +59,54 @@
     } else {
         tasksJSON = [NSJSONSerialization JSONObjectWithData:dataRead options:NSJSONReadingMutableContainers error:&jsonError];
     }
+    NSArray *activeJSON;
     
+    // fetch Active
+    {
+        NSTask * taskCommand = [[NSTask alloc] init];
+        NSString *path = @"/usr/local/bin/task";
+        [taskCommand setLaunchPath:path];
+        NSArray *args = [NSArray arrayWithObjects:@"export", @"+ACTIVE", nil];
+        [taskCommand setArguments:args];
+        NSPipe * out = [NSPipe pipe];
+        [taskCommand setStandardOutput:out];
+        
+        [taskCommand launch];
+
+        NSFileHandle * read = [out fileHandleForReading];
+        dataRead = [read readDataToEndOfFile];
+        // Now exit task
+        [taskCommand waitUntilExit];
+        [taskCommand release];
+    }
+    activeContents = [[[NSString alloc] initWithData:dataRead encoding:NSUTF8StringEncoding] autorelease];
+
+    if ([activeContents isEqualToString:@""]) {
+        activeJSON = nil;
+    } else {
+        activeJSON = [NSJSONSerialization JSONObjectWithData:dataRead options:NSJSONReadingMutableContainers error:&jsonError];
+    }
+
     NSMutableArray *tasks = [NSMutableArray array];
     
     for (NSDictionary *task in tasksJSON) {
         [tasks addObject:task];
     }
     
+    NSMutableArray *atasks = [NSMutableArray array];
+    
+    for (NSDictionary *task in activeJSON) {
+        [atasks addObject:task];
+    }
+
     [tasks sortUsingComparator:^(id a, id b) {
         return [[b objectForKey:@"urgency"] compare:[a objectForKey:@"urgency"]];
     }];
     
+    [atasks sortUsingComparator:^(id a, id b) {
+        return [[b objectForKey:@"urgency"] compare:[a objectForKey:@"urgency"]];
+    }];
+
     NSDate *dueDate;
     NSMenuItem *taskMI;
     NSDictionary *attributes;
@@ -148,22 +190,30 @@
     
     [menuAttributes setObject:textColor
                        forKey:NSForegroundColorAttributeName];
-    statusTitle = [NSString stringWithFormat:@"%lu", (unsigned long)[tasksJSON count]];
-    if (pMedium > 0) {
-        [menuAttributes setObject:[NSColor orangeColor]
-                           forKey:NSForegroundColorAttributeName];
-        statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasksJSON count], (long)pMedium];
+    unsigned long activeCount =  (unsigned long)[activeJSON count];
+    
+    statusTitle = [NSString stringWithFormat:@"*%lu/%lu",activeCount,
+                                            (unsigned long)[tasksJSON count]];
+    if(activeCount == 0) {
+        [ menuAttributes setObject:[NSColor blackColor]  forKey:NSForegroundColorAttributeName];
+    } else if(activeCount >= 1) {
+        [ menuAttributes setObject:[NSColor orangeColor]  forKey:NSForegroundColorAttributeName];
     }
-    if (pHigh > 0) {
-        [menuAttributes setObject:[NSColor magentaColor]
-                           forKey:NSForegroundColorAttributeName];
-        statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasksJSON count], (long)pHigh];
-    }
-    if (overdue > 0) {
-        [menuAttributes setObject:[NSColor redColor]
-                           forKey:NSForegroundColorAttributeName];
-        statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasksJSON count], (long)overdue];
-    }
+//    if (pMedium > 0) {
+//        [menuAttributes setObject:[NSColor orangeColor]
+//                           forKey:NSForegroundColorAttributeName];
+//        statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasksJSON count], (long)pMedium];
+//    }
+//    if (pHigh > 0) {
+//        [menuAttributes setObject:[NSColor magentaColor]
+//                           forKey:NSForegroundColorAttributeName];
+//        statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasksJSON count], (long)pHigh];
+//    }
+//    if (overdue > 0) {
+//        [menuAttributes setObject:[NSColor redColor]
+//                           forKey:NSForegroundColorAttributeName];
+//        statusTitle = [NSString stringWithFormat:@"%lux%ld", (unsigned long)[tasksJSON count], (long)overdue];
+//    }
     
     
     [statusItem setAttributedTitle:[[[NSAttributedString alloc]

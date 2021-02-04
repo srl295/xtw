@@ -17,6 +17,7 @@
     NSTimer *automaticUpdateTimer;
     NSString *pendingPath;
     NSString *taskContents;
+    NSString *activeContents;
     NSMenuItem *quitMI;
     NSMenuItem *aboutMI;
     BOOL darkModeOn;
