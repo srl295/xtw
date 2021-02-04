@@ -37,12 +37,13 @@
     [taskCommand setStandardOutput:out];
     
     [taskCommand launch];
-    [taskCommand waitUntilExit];
-    [taskCommand release];
-    
-    
+
     NSFileHandle * read = [out fileHandleForReading];
     NSData * dataRead = [read readDataToEndOfFile];
+    // Now exit task
+    [taskCommand waitUntilExit];
+    [taskCommand release];
+
     taskContents = [[[NSString alloc] initWithData:dataRead encoding:NSUTF8StringEncoding] autorelease];
     
     NSError *jsonError;
@@ -107,6 +108,9 @@
                 case NSOrderedAscending: //dueDate < now
                     overdue++;
                     [attributedTitle addAttribute:NSForegroundColorAttributeName value:[NSColor redColor] range:NSMakeRange(0,[taskMI title].length)];
+                    break;
+                case NSOrderedDescending:
+                    // dueDate > now - ignore
                     break;
             }
         }
